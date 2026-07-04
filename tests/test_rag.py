@@ -69,3 +69,42 @@ def test_pipeline_complet_retourne_str(collection_test):
     resultat = _generer_avec_rag("Comment suivre ma commande ?", collection, modele, modele_llm, tokeniseur)
     assert isinstance(resultat["reponse"], str)
     assert len(resultat["reponse"]) > 0
+
+
+from sentence_transformers import CrossEncoder
+from rag.reranking import _reclasser_passages, NOM_MODELE_CROSSENCODER
+
+
+@pytest.fixture(scope="module")
+def modele_crossencoder_test():
+    return CrossEncoder(NOM_MODELE_CROSSENCODER)
+
+
+def test_reranking_retourne_top_k(modele_crossencoder_test):
+    candidats = [
+        {"id": "a", "texte": "Le délai de retour est de 30 jours."},
+        {"id": "b", "texte": "La météo est ensoleillée aujourd'hui."},
+        {"id": "c", "texte": "Vous pouvez retourner un article sous 30 jours."},
+        {"id": "d", "texte": "Notre siège social est à Paris."},
+    ]
+    resultats = _reclasser_passages("Quel est le délai de retour ?", candidats, modele_crossencoder_test, top_k_final=2)
+    assert len(resultats) == 2
+
+
+def test_reranking_ordre_coherent(modele_crossencoder_test):
+    candidats = [
+        {"id": "pertinent", "texte": "Le délai de retour est de 30 jours pour tout article."},
+        {"id": "non_pertinent", "texte": "Nous vendons des cartes cadeaux de 10 à 200 euros."},
+    ]
+    resultats = _reclasser_passages("Quel est le délai de retour ?", candidats, modele_crossencoder_test, top_k_final=2)
+    assert resultats[0]["id"] == "pertinent"
+
+
+def test_reranking_integre_pipeline(collection_test, modele_crossencoder_test):
+    collection, modele = collection_test
+    modele_llm, tokeniseur = charger_modele_et_tokeniseur()
+    resultat = _generer_avec_rag(
+        "Comment suivre ma commande ?", collection, modele, modele_llm, tokeniseur, modele_crossencoder_test
+    )
+    assert isinstance(resultat["reponse"], str)
+    assert len(resultat["reponse"]) > 0
