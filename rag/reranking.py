@@ -23,7 +23,7 @@ def _reclasser_passages(
     scores = modele_crossencoder.predict(paires)
 
     # 3. Attacher le score à chaque candidat
-    for candidat, score in zip(candidats, scores):
+    for candidat, score in zip(candidats, scores, strict=False):
         candidat["score_rerank"] = float(score)
 
     # 4. Trier par score décroissant (le plus pertinent en premier)
@@ -36,6 +36,7 @@ def _reclasser_passages(
 if __name__ == "__main__":
     import chromadb
     from sentence_transformers import SentenceTransformer
+
     from rag.recherche import _rechercher_documents
 
     client = chromadb.PersistentClient(path="data/chroma_db")
@@ -46,9 +47,7 @@ if __name__ == "__main__":
     requete_test = "Je veux renvoyer un article, comment faire ?"
 
     # Étape 1 : bi-encoder récupère un nombre élargi de candidats
-    candidats = _rechercher_documents(
-        requete_test, collection, modele_embedding, top_k=10
-    )
+    candidats = _rechercher_documents(requete_test, collection, modele_embedding, top_k=10)
     print("Avant reranking :")
     for c in candidats:
         print(f"  [{c['id']}] score_biencoder={c['score']} → {c['texte'][:50]}...")
@@ -59,6 +58,4 @@ if __name__ == "__main__":
     )
     print("\nAprès reranking :")
     for c in resultats_reranked:
-        print(
-            f"  [{c['id']}] score_rerank={c['score_rerank']:.3f} → {c['texte'][:50]}..."
-        )
+        print(f"  [{c['id']}] score_rerank={c['score_rerank']:.3f} → {c['texte'][:50]}...")

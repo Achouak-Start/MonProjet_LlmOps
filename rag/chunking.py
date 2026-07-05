@@ -2,9 +2,7 @@ import json
 from pathlib import Path
 
 
-def _decouper_document(
-    texte: str, taille_chunk: int = 200, chevauchement: int = 30
-) -> list[str]:
+def _decouper_document(texte: str, taille_chunk: int = 200, chevauchement: int = 30) -> list[str]:
     """
     Découpe un texte en une liste de chunks (morceaux) de taille_chunk mots,
     avec un chevauchement de chevauchement mots entre chunks consécutifs.

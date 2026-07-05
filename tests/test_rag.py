@@ -1,22 +1,18 @@
 import chromadb
-from sentence_transformers import SentenceTransformer
-
-from rag.recherche import _rechercher_documents
-from rag.pipeline import _construire_prompt_augmente, _generer_avec_rag
-from src.modele import charger_modele_et_tokeniseur
-from sentence_transformers import CrossEncoder
-from rag.reranking import _reclasser_passages, NOM_MODELE_CROSSENCODER
-
 import pytest
+from sentence_transformers import CrossEncoder, SentenceTransformer
+
+from rag.pipeline import _construire_prompt_augmente, _generer_avec_rag
+from rag.recherche import _rechercher_documents
+from rag.reranking import NOM_MODELE_CROSSENCODER, _reclasser_passages
+from src.modele import charger_modele_et_tokeniseur
 
 
 @pytest.fixture(scope="module")
 def collection_test():
     """Crée une collection ChromaDB temporaire en mémoire, peuplée de documents de test."""
     client = chromadb.Client()  # client en mémoire (pas persistant)
-    collection = client.create_collection(
-        name="test_faq", metadata={"hnsw:space": "cosine"}
-    )
+    collection = client.create_collection(name="test_faq", metadata={"hnsw:space": "cosine"})
 
     modele = SentenceTransformer("all-MiniLM-L6-v2")
 
@@ -48,17 +44,13 @@ def collection_test():
 
 def test_recherche_retourne_resultats(collection_test):
     collection, modele = collection_test
-    resultats = _rechercher_documents(
-        "Comment retourner un article ?", collection, modele, top_k=2
-    )
+    resultats = _rechercher_documents("Comment retourner un article ?", collection, modele, top_k=2)
     assert len(resultats) > 0
 
 
 def test_recherche_pertinence(collection_test):
     collection, modele = collection_test
-    resultats = _rechercher_documents(
-        "Je veux retourner un article", collection, modele, top_k=2
-    )
+    resultats = _rechercher_documents("Je veux retourner un article", collection, modele, top_k=2)
     ids_trouves = [r["id"] for r in resultats]
     assert "faq-01" in ids_trouves
 

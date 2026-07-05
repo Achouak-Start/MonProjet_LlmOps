@@ -1,11 +1,12 @@
 import chromadb
-from sentence_transformers import SentenceTransformer, CrossEncoder
+from sentence_transformers import CrossEncoder, SentenceTransformer
 
 from rag.recherche import _rechercher_documents
-from rag.reranking import _reclasser_passages, NOM_MODELE_CROSSENCODER
+from rag.reranking import NOM_MODELE_CROSSENCODER, _reclasser_passages
 from src.modele import charger_modele_et_tokeniseur, generer_reponse
 
-PROMPT_SYSTEME = """Tu es un assistant service client. Réponds uniquement en te basant sur le contexte fourni.
+PROMPT_SYSTEME = """Tu es un assistant service client.
+Réponds uniquement en te basant sur le contexte fourni.
 Si la réponse n'est pas dans le contexte, réponds : "Je n'ai pas l'information."
 
 Contexte :
@@ -24,9 +25,7 @@ def _construire_prompt_augmente(question: str, documents: list[dict]) -> str:
     if not documents:
         contexte = "(aucun document pertinent trouvé)"
     else:
-        contexte = "\n".join(
-            f"[{i+1}] {doc['texte']}" for i, doc in enumerate(documents)
-        )
+        contexte = "\n".join(f"[{i+1}] {doc['texte']}" for i, doc in enumerate(documents))
 
     return PROMPT_SYSTEME.format(contexte=contexte, question=question)
 
@@ -40,8 +39,8 @@ def _generer_avec_rag(
     modele_crossencoder=None,
 ) -> dict:
     """
-    Pipeline RAG complet : recherche (bi-encoder) -> reranking (cross-encoder) -> prompt augmenté -> génération.
-
+    Pipeline RAG complet : recherche (bi-encoder) -> reranking
+    (cross-encoder) -> prompt augmenté -> génération.
     Retourne : {"reponse": ..., "documents_sources": [ids des documents utilisés]}
     """
     # 1. Recherche élargie des documents candidats (bi-encoder)

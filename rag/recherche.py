@@ -4,9 +4,7 @@ NOM_MODELE_EMBEDDING = "all-MiniLM-L6-v2"
 SEUIL_SIMILARITE = 0.4  # en dessous de ce score, on considère le doc non pertinent
 
 
-def _rechercher_documents(
-    requete: str, collection, modele_embedding, top_k: int = 3
-) -> list[dict]:
+def _rechercher_documents(requete: str, collection, modele_embedding, top_k: int = 3) -> list[dict]:
     """
     Recherche les documents les plus proches sémantiquement d'une requête.
 
@@ -28,7 +26,7 @@ def _rechercher_documents(
     distances = resultats["distances"][0]
     metadatas = resultats["metadatas"][0]
 
-    for id_doc, texte, distance, metadata in zip(ids, textes, distances, metadatas):
+    for id_doc, texte, distance, metadata in zip(ids, textes, distances, metadatas, strict=False):
         # Avec la distance cosinus, similarité = 1 - distance
         score_similarite = 1 - distance
 
