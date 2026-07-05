@@ -84,3 +84,6 @@ if __name__ == "__main__":
     print(f"Nombre de chunks : {len(chunks)}")
     for i, c in enumerate(chunks):
         print(f"Chunk {i} : {len(c.split())} mots")
+
+
+def _decouper_document(texte: str, taille_chunk: int = 200, chevauchement: int = 30) -> list[str]:
