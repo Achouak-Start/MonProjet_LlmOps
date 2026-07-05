@@ -20,3 +20,11 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: []
+
+  - repo: local
+    hooks:
+      - id: bloquer-fichiers-modeles
+        name: Bloquer les fichiers de modèles (.pt, .bin, .safetensors)
+        entry: bash -c 'git diff --cached --name-only | grep -E "\.(pt|bin|safetensors)$" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
