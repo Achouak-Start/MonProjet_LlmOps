@@ -3,7 +3,9 @@ from sentence_transformers import CrossEncoder
 NOM_MODELE_CROSSENCODER = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 
-def _reclasser_passages(requete: str, candidats: list[dict], modele_crossencoder, top_k_final: int = 3) -> list[dict]:
+def _reclasser_passages(
+    requete: str, candidats: list[dict], modele_crossencoder, top_k_final: int = 3
+) -> list[dict]:
     """
     Reclasse une liste de candidats (résultats du bi-encoder) avec un cross-encoder,
     plus précis mais plus lent.
@@ -44,13 +46,19 @@ if __name__ == "__main__":
     requete_test = "Je veux renvoyer un article, comment faire ?"
 
     # Étape 1 : bi-encoder récupère un nombre élargi de candidats
-    candidats = _rechercher_documents(requete_test, collection, modele_embedding, top_k=10)
+    candidats = _rechercher_documents(
+        requete_test, collection, modele_embedding, top_k=10
+    )
     print("Avant reranking :")
     for c in candidats:
         print(f"  [{c['id']}] score_biencoder={c['score']} → {c['texte'][:50]}...")
 
     # Étape 2 : cross-encoder reclasse et garde les meilleurs
-    resultats_reranked = _reclasser_passages(requete_test, candidats, modele_crossencoder, top_k_final=3)
+    resultats_reranked = _reclasser_passages(
+        requete_test, candidats, modele_crossencoder, top_k_final=3
+    )
     print("\nAprès reranking :")
     for c in resultats_reranked:
-        print(f"  [{c['id']}] score_rerank={c['score_rerank']:.3f} → {c['texte'][:50]}...")
+        print(
+            f"  [{c['id']}] score_rerank={c['score_rerank']:.3f} → {c['texte'][:50]}..."
+        )

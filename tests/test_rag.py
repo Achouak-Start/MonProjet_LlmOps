@@ -4,6 +4,8 @@ from sentence_transformers import SentenceTransformer
 from rag.recherche import _rechercher_documents
 from rag.pipeline import _construire_prompt_augmente, _generer_avec_rag
 from src.modele import charger_modele_et_tokeniseur
+from sentence_transformers import CrossEncoder
+from rag.reranking import _reclasser_passages, NOM_MODELE_CROSSENCODER
 
 import pytest
 
@@ -12,13 +14,23 @@ import pytest
 def collection_test():
     """Crée une collection ChromaDB temporaire en mémoire, peuplée de documents de test."""
     client = chromadb.Client()  # client en mémoire (pas persistant)
-    collection = client.create_collection(name="test_faq", metadata={"hnsw:space": "cosine"})
+    collection = client.create_collection(
+        name="test_faq", metadata={"hnsw:space": "cosine"}
+    )
 
     modele = SentenceTransformer("all-MiniLM-L6-v2")
 
     documents_test = [
-        {"id": "faq-01", "question": "Quel est le délai de retour ?", "reponse": "30 jours."},
-        {"id": "faq-02", "question": "Comment suivre ma commande ?", "reponse": "Par email."},
+        {
+            "id": "faq-01",
+            "question": "Quel est le délai de retour ?",
+            "reponse": "30 jours.",
+        },
+        {
+            "id": "faq-02",
+            "question": "Comment suivre ma commande ?",
+            "reponse": "Par email.",
+        },
     ]
 
     questions = [doc["question"] for doc in documents_test]
@@ -36,13 +48,17 @@ def collection_test():
 
 def test_recherche_retourne_resultats(collection_test):
     collection, modele = collection_test
-    resultats = _rechercher_documents("Comment retourner un article ?", collection, modele, top_k=2)
+    resultats = _rechercher_documents(
+        "Comment retourner un article ?", collection, modele, top_k=2
+    )
     assert len(resultats) > 0
 
 
 def test_recherche_pertinence(collection_test):
     collection, modele = collection_test
-    resultats = _rechercher_documents("Je veux retourner un article", collection, modele, top_k=2)
+    resultats = _rechercher_documents(
+        "Je veux retourner un article", collection, modele, top_k=2
+    )
     ids_trouves = [r["id"] for r in resultats]
     assert "faq-01" in ids_trouves
 
@@ -66,13 +82,11 @@ def test_prompt_augmente_contient_contexte():
 def test_pipeline_complet_retourne_str(collection_test):
     collection, modele = collection_test
     modele_llm, tokeniseur = charger_modele_et_tokeniseur()
-    resultat = _generer_avec_rag("Comment suivre ma commande ?", collection, modele, modele_llm, tokeniseur)
+    resultat = _generer_avec_rag(
+        "Comment suivre ma commande ?", collection, modele, modele_llm, tokeniseur
+    )
     assert isinstance(resultat["reponse"], str)
     assert len(resultat["reponse"]) > 0
-
-
-from sentence_transformers import CrossEncoder
-from rag.reranking import _reclasser_passages, NOM_MODELE_CROSSENCODER
 
 
 @pytest.fixture(scope="module")
@@ -87,16 +101,32 @@ def test_reranking_retourne_top_k(modele_crossencoder_test):
         {"id": "c", "texte": "Vous pouvez retourner un article sous 30 jours."},
         {"id": "d", "texte": "Notre siège social est à Paris."},
     ]
-    resultats = _reclasser_passages("Quel est le délai de retour ?", candidats, modele_crossencoder_test, top_k_final=2)
+    resultats = _reclasser_passages(
+        "Quel est le délai de retour ?",
+        candidats,
+        modele_crossencoder_test,
+        top_k_final=2,
+    )
     assert len(resultats) == 2
 
 
 def test_reranking_ordre_coherent(modele_crossencoder_test):
     candidats = [
-        {"id": "pertinent", "texte": "Le délai de retour est de 30 jours pour tout article."},
-        {"id": "non_pertinent", "texte": "Nous vendons des cartes cadeaux de 10 à 200 euros."},
+        {
+            "id": "pertinent",
+            "texte": "Le délai de retour est de 30 jours pour tout article.",
+        },
+        {
+            "id": "non_pertinent",
+            "texte": "Nous vendons des cartes cadeaux de 10 à 200 euros.",
+        },
     ]
-    resultats = _reclasser_passages("Quel est le délai de retour ?", candidats, modele_crossencoder_test, top_k_final=2)
+    resultats = _reclasser_passages(
+        "Quel est le délai de retour ?",
+        candidats,
+        modele_crossencoder_test,
+        top_k_final=2,
+    )
     assert resultats[0]["id"] == "pertinent"
 
 
@@ -104,7 +134,12 @@ def test_reranking_integre_pipeline(collection_test, modele_crossencoder_test):
     collection, modele = collection_test
     modele_llm, tokeniseur = charger_modele_et_tokeniseur()
     resultat = _generer_avec_rag(
-        "Comment suivre ma commande ?", collection, modele, modele_llm, tokeniseur, modele_crossencoder_test
+        "Comment suivre ma commande ?",
+        collection,
+        modele,
+        modele_llm,
+        tokeniseur,
+        modele_crossencoder_test,
     )
     assert isinstance(resultat["reponse"], str)
     assert len(resultat["reponse"]) > 0

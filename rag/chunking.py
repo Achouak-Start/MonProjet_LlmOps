@@ -2,7 +2,9 @@ import json
 from pathlib import Path
 
 
-def _decouper_document(texte: str, taille_chunk: int = 200, chevauchement: int = 30) -> list[str]:
+def _decouper_document(
+    texte: str, taille_chunk: int = 200, chevauchement: int = 30
+) -> list[str]:
     """
     Découpe un texte en une liste de chunks (morceaux) de taille_chunk mots,
     avec un chevauchement de chevauchement mots entre chunks consécutifs.
@@ -34,7 +36,13 @@ def _decouper_document(texte: str, taille_chunk: int = 200, chevauchement: int =
     return chunks
 
 
-def _indexer_documents_longs(chemin_jsonl: Path, collection, modele_embedding, taille_chunk: int = 200, chevauchement: int = 30):
+def _indexer_documents_longs(
+    chemin_jsonl: Path,
+    collection,
+    modele_embedding,
+    taille_chunk: int = 200,
+    chevauchement: int = 30,
+):
     """
     Charge des documents longs depuis un JSONL, les découpe en chunks,
     et les insère dans ChromaDB avec l'ID du document parent en métadonnée.
@@ -69,7 +77,7 @@ def _indexer_documents_longs(chemin_jsonl: Path, collection, modele_embedding, t
     print(f"{len(ids_chunks)} chunks indexés depuis {len(documents)} document(s).")
 
 
-#Test Chunking
+# Test Chunking
 if __name__ == "__main__":
     texte_exemple = "mot " * 100  # 100 mots factices pour tester
     chunks = _decouper_document(texte_exemple, taille_chunk=30, chevauchement=5)

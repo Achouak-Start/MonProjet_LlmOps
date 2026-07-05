@@ -31,7 +31,14 @@ def _construire_prompt_augmente(question: str, documents: list[dict]) -> str:
     return PROMPT_SYSTEME.format(contexte=contexte, question=question)
 
 
-def _generer_avec_rag(prompt_utilisateur: str, collection, modele_embedding, modele_llm, tokeniseur, modele_crossencoder=None) -> dict:
+def _generer_avec_rag(
+    prompt_utilisateur: str,
+    collection,
+    modele_embedding,
+    modele_llm,
+    tokeniseur,
+    modele_crossencoder=None,
+) -> dict:
     """
     Pipeline RAG complet : recherche (bi-encoder) -> reranking (cross-encoder) -> prompt augmenté -> génération.
 
@@ -52,7 +59,10 @@ def _generer_avec_rag(prompt_utilisateur: str, collection, modele_embedding, mod
     # 3. Reranking avec le cross-encoder (si fourni)
     if modele_crossencoder is not None:
         documents_trouves = _reclasser_passages(
-            prompt_utilisateur, documents_trouves, modele_crossencoder, top_k_final=TOP_K_FINAL
+            prompt_utilisateur,
+            documents_trouves,
+            modele_crossencoder,
+            top_k_final=TOP_K_FINAL,
         )
     else:
         documents_trouves = documents_trouves[:TOP_K_FINAL]
@@ -83,7 +93,12 @@ if __name__ == "__main__":
 
     question_test = "Je veux renvoyer un article, comment faire ?"
     resultat = _generer_avec_rag(
-        question_test, collection, modele_embedding, modele_llm, tokeniseur, modele_crossencoder
+        question_test,
+        collection,
+        modele_embedding,
+        modele_llm,
+        tokeniseur,
+        modele_crossencoder,
     )
 
     print(f"\nQuestion : {question_test}")

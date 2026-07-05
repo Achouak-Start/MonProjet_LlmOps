@@ -2,7 +2,6 @@ import chromadb
 from sentence_transformers import SentenceTransformer
 
 from rag.chunking import _decouper_document, _indexer_documents_longs
-import pytest
 
 
 def test_decoupe_sans_chevauchement():
@@ -36,7 +35,9 @@ def test_texte_plus_court_que_chunk():
 
 def test_metadonnees_source():
     client = chromadb.Client()  # collection en mémoire, isolée
-    collection = client.create_collection(name="test_chunking", metadata={"hnsw:space": "cosine"})
+    collection = client.create_collection(
+        name="test_chunking", metadata={"hnsw:space": "cosine"}
+    )
     modele = SentenceTransformer("all-MiniLM-L6-v2")
 
     # On simule un mini fichier JSONL en écrivant un fichier temporaire
@@ -44,12 +45,16 @@ def test_metadonnees_source():
     import tempfile
     from pathlib import Path
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8") as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".jsonl", delete=False, encoding="utf-8"
+    ) as f:
         json.dump({"id": "doc-test", "texte": "mot " * 250}, f)
         f.write("\n")
         chemin_temp = Path(f.name)
 
-    _indexer_documents_longs(chemin_temp, collection, modele, taille_chunk=100, chevauchement=10)
+    _indexer_documents_longs(
+        chemin_temp, collection, modele, taille_chunk=100, chevauchement=10
+    )
 
     resultats = collection.get()
     assert len(resultats["ids"]) > 0

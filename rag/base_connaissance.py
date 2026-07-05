@@ -32,7 +32,9 @@ def creer_base_connaissance() -> chromadb.Collection:
 
     # Évite les doublons si la collection est déjà peuplée
     if collection.count() > 0:
-        print(f"Collection déjà peuplée ({collection.count()} documents). Aucune insertion.")
+        print(
+            f"Collection déjà peuplée ({collection.count()} documents). Aucune insertion."
+        )
         return collection
 
     documents_faq = charger_faq(CHEMIN_FAQ)
@@ -45,7 +47,10 @@ def creer_base_connaissance() -> chromadb.Collection:
 
     ids = [doc["id"] for doc in documents_faq]
     textes = [doc["reponse"] for doc in documents_faq]
-    metadonnees = [{"question": doc["question"], "categorie": doc["categorie"]} for doc in documents_faq]
+    metadonnees = [
+        {"question": doc["question"], "categorie": doc["categorie"]}
+        for doc in documents_faq
+    ]
 
     collection.add(
         ids=ids,
